@@ -2,6 +2,36 @@
 
 A cross-platform PHP version manager, NVM-style, written in Rust.
 
+## Install
+
+POSIX shells (bash/zsh):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/olashina201/php-vm/main/scripts/install.sh | bash
+```
+
+Using wget:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/olashina201/php-vm/main/scripts/install.sh | bash
+```
+
+Pin a specific version (release tag):
+
+```bash
+PHPVM_VERSION=v0.1.0 \
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/olashina201/php-vm/main/scripts/install.sh)"
+```
+
+After install, restart your shell or run:
+
+```bash
+export PATH="$HOME/.phpvm/bin:$PATH"
+phpvm doctor
+```
+
+On Windows, use the prebuilt archive from Releases or a PowerShell installer (coming soon).
+
 ## Quickstart
 
 ```bash
