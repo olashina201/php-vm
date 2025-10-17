@@ -51,13 +51,6 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install Perl and NASM (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install strawberryperl nasm -y
-          echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
       - name: Install cross
         if: matrix.use_cross
         run: cargo install cross --git https://github.com/cross-rs/cross
@@ -65,14 +58,11 @@ jobs:
       - name: Cargo build (release)
         run: |
           if [[ "${{ matrix.use_cross }}" == "true" ]]; then
-            cross build --release --target ${{ matrix.target }}
+            cross build --release --target ${{ matrix.target }} --no-default-features --features rustls
           else
-            cargo build --release --target ${{ matrix.target }}
+            cargo build --release --target ${{ matrix.target }} --no-default-features --features rustls
           fi
         shell: bash
-        env:
-          OPENSSL_STATIC: 1
-          OPENSSL_NO_VENDOR: 0
 
       - name: Package artifact
         shell: bash
