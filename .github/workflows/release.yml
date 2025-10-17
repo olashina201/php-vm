@@ -62,12 +62,6 @@ jobs:
         if: matrix.use_cross
         run: cargo install cross --git https://github.com/cross-rs/cross
 
-      - name: Set OpenSSL env for Linux
-        if: runner.os == 'Linux'
-        run: |
-          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
-          echo "OPENSSL_NO_VENDOR=0" >> $GITHUB_ENV
-
       - name: Cargo build (release)
         run: |
           if [[ "${{ matrix.use_cross }}" == "true" ]]; then
@@ -77,8 +71,8 @@ jobs:
           fi
         shell: bash
         env:
-          OPENSSL_STATIC: ${{ runner.os == 'Linux' && '1' || '' }}
-          OPENSSL_NO_VENDOR: ${{ runner.os == 'Linux' && '0' || '' }}
+          OPENSSL_STATIC: 1
+          OPENSSL_NO_VENDOR: 0
 
       - name: Package artifact
         shell: bash
