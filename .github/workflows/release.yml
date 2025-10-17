@@ -38,11 +38,11 @@ jobs:
             out_os: linux
             out_arch: arm64
             use_cross: true
-          - os: windows-2022
-            target: x86_64-pc-windows-msvc
-            out_os: windows
-            out_arch: amd64
-            use_cross: false
+          # - os: windows-2022
+          #   target: x86_64-pc-windows-msvc
+          #   out_os: windows
+          #   out_arch: amd64
+          #   use_cross: false
 
     steps:
       - uses: actions/checkout@v4
