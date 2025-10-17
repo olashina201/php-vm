@@ -45,9 +45,12 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install dependencies (Linux cross-aarch64)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Set vendored OpenSSL for Linux
+        if: runner.os == 'Linux'
+        run: |
+          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+          echo "OPENSSL_NO_VENDOR=0" >> $GITHUB_ENV
+
       - name: Cargo build (release)
         if: matrix.out_os != 'windows'
         shell: bash
@@ -70,8 +73,7 @@ jobs:
       #     $zip = "$outdir/phpvm-windows-${{ matrix.out_arch }}.zip"
       #     Compress-Archive -Path $src -DestinationPath $zip -Force
 
-      - name: Package artifact (Unix)
-        if: matrix.out_os != 'windows'
+      - name: Package artifact
         shell: bash
         run: |
           set -euo pipefail
