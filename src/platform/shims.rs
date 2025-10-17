@@ -15,11 +15,12 @@ fn install_shim(dir: &Path, name: &str) -> anyhow::Result<()> {
         // Write a .cmd shim
         let path = dir.join(format!("{}.cmd", name));
         let content = format!(
-            "@echo off\r\n".
-            to_owned() + "setlocal enabledelayedexpansion\r\n" +
-            "phpvm which " + name + " >nul 2>nul\r\n" +
-            "for /f \"usebackq tokens=*\" %%i in (`phpvm which " + name + "`) do set TARGET=%%i\r\n" +
-            "%TARGET% %*\r\n"
+            "@echo off\r\n\
+             setlocal enabledelayedexpansion\r\n\
+             phpvm which {} >nul 2>nul\r\n\
+             for /f \"usebackq tokens=*\" %%i in (`phpvm which {}`) do set TARGET=%%i\r\n\
+             %TARGET% %*\r\n",
+            name, name
         );
         fs::write(path, content)?;
     }

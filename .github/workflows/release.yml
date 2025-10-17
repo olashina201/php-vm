@@ -49,12 +49,14 @@ jobs:
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
       - name: Cargo build (release)
-        run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            cargo build --release --target ${{ matrix.target }}
-          else
-            cargo build --release --target ${{ matrix.target }}
-          fi
+        if: matrix.out_os != 'windows'
+        shell: bash
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Cargo build (release) - Windows
+        if: matrix.out_os == 'windows'
+        shell: pwsh
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package artifact (Windows)
         if: matrix.out_os == 'windows'
