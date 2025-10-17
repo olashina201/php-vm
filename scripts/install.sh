@@ -65,7 +65,7 @@ if [[ -n "${PHPVM_VERSION:-}" ]]; then
   tag="$PHPVM_VERSION"
 else
   echo "Resolving latest release…"
-  tag="$(fetch "${api_base}/releases/latest" | sed -n 's/.*"tag_name"\s*:\s*"\([^"]\+\)".*/\1/p' | head -n1)"
+  tag="$(fetch "${api_base}/releases/latest" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
   if [[ -z "$tag" ]]; then
     echo "Failed to determine latest release tag" >&2
     exit 1
