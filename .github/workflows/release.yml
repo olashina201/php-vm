@@ -2,7 +2,13 @@ name: release
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*"
+  release:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -50,33 +56,44 @@ jobs:
             cargo build --release --target ${{ matrix.target }}
           fi
 
-      - name: Package artifact
+      - name: Package artifact (Windows)
+        if: matrix.out_os == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bin = 'phpvm.exe'
+          $src = "target/${{ matrix.target }}/release/$bin"
+          $outdir = "dist"
+          New-Item -ItemType Directory -Force -Path $outdir | Out-Null
+          $zip = "$outdir/phpvm-windows-${{ matrix.out_arch }}.zip"
+          Compress-Archive -Path $src -DestinationPath $zip -Force
+
+      - name: Package artifact (Unix)
+        if: matrix.out_os != 'windows'
         shell: bash
         run: |
           set -euo pipefail
           BIN=phpvm
-          CASE_OS=${{ matrix.out_os }}
-          CASE_ARCH=${{ matrix.out_arch }}
           OUTDIR=dist
           mkdir -p "$OUTDIR"
-          if [ "$CASE_OS" = "windows" ]; then
-            SRC="target/${{ matrix.target }}/release/${BIN}.exe"
-            ZIP="${OUTDIR}/${BIN}-${CASE_OS}-${CASE_ARCH}.zip"
-            7z a "$ZIP" "$SRC" >/dev/null
-          else
-            SRC="target/${{ matrix.target }}/release/${BIN}"
-            TARBALL="${OUTDIR}/${BIN}-${CASE_OS}-${CASE_ARCH}.tar.gz"
-            tar -C "$(dirname "$SRC")" -czf "$TARBALL" "$(basename "$SRC")"
-          fi
+          SRC="target/${{ matrix.target }}/release/${BIN}"
+          TARBALL="${OUTDIR}/${BIN}-${{ matrix.out_os }}-${{ matrix.out_arch }}.tar.gz"
+          tar -C "$(dirname "$SRC")" -czf "$TARBALL" "$(basename "$SRC")"
 
       - name: Generate checksums
         shell: bash
         run: |
+          set -euo pipefail
           cd dist
           shopt -s nullglob
           rm -f SHA256SUMS
-          for f in *.{tar.gz,zip}; do
-            sha256sum "$f" >> SHA256SUMS
+          for f in *.tar.gz *.zip; do
+            [ -f "$f" ] || continue
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$f" >> SHA256SUMS
+            else
+              shasum -a 256 "$f" >> SHA256SUMS
+            fi
           done
 
       - name: Upload release artifacts
