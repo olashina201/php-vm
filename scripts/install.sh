@@ -79,10 +79,10 @@ zip_name="${asset_prefix}.zip"
 echo "Fetching release assets for ${tag}…"
 release_json="$(fetch "${api_base}/releases/tags/${tag}")"
 
-asset_url="$(printf "%s" "$release_json" | grep "${tar_name}" | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')"
+asset_url="$(printf "%s" "$release_json" | grep -A 1 "${tar_name}" | grep "browser_download_url" | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')"
 if [[ -z "$asset_url" ]]; then
   # try zip (unlikely on unix, but fallback)
-  asset_url="$(printf "%s" "$release_json" | grep "${zip_name}" | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')"
+  asset_url="$(printf "%s" "$release_json" | grep -A 1 "${zip_name}" | grep "browser_download_url" | sed 's/.*"browser_download_url": *"\([^"]*\)".*/\1/')"
 fi
 
 if [[ -z "$asset_url" ]]; then
