@@ -25,14 +25,18 @@ jobs:
             target: aarch64-apple-darwin
             out_os: darwin
             out_arch: arm64
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             out_os: linux
             out_arch: amd64
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             out_os: linux
             out_arch: arm64
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+            out_os: windows
+            out_arch: amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -41,19 +45,33 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
-
-      - name: Set vendored OpenSSL for aarch64
-        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
-          echo "OPENSSL_NO_VENDOR=0" >> $GITHUB_ENV
+      - name: Install dependencies (Linux cross-aarch64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
       - name: Cargo build (release)
+        if: matrix.out_os != 'windows'
+        shell: bash
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package artifact
+      # - name: Cargo build (release) - Windows
+      #   if: matrix.out_os == 'windows'
+      #   shell: pwsh
+      #   run: cargo build --release --target ${{ matrix.target }}
+
+      # - name: Package artifact (Windows)
+      #   if: matrix.out_os == 'windows'
+      #   shell: pwsh
+      #   run: |
+      #     $ErrorActionPreference = 'Stop'
+      #     $bin = 'phpvm.exe'
+      #     $src = "target/${{ matrix.target }}/release/$bin"
+      #     $outdir = "dist"
+      #     New-Item -ItemType Directory -Force -Path $outdir | Out-Null
+      #     $zip = "$outdir/phpvm-windows-${{ matrix.out_arch }}.zip"
+      #     Compress-Archive -Path $src -DestinationPath $zip -Force
+
+      - name: Package artifact (Unix)
+        if: matrix.out_os != 'windows'
         shell: bash
         run: |
           set -euo pipefail
