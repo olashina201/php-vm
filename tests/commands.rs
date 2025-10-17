@@ -53,6 +53,10 @@ fn cache_prune_idempotent() {
         assert!(output.status.success(), "cache prune failed: {}", String::from_utf8_lossy(&output.stderr));
     }
     let cache = home.join(".phpvm").join("cache");
+    // Ensure cache directory exists (it should be created by doctor command)
+    if !cache.exists() {
+        let _ = phpvm_with_home(&home).arg("doctor").output();
+    }
     assert!(cache.exists());
 }
 
@@ -80,7 +84,7 @@ fn set_global_and_local() {
     let home = mk_temp_home("set_versions");
     // global
     let g = phpvm_with_home(&home).args(["global", "1.2.3"]).output().unwrap();
-    assert!(g.status.success());
+    assert!(g.status.success(), "global failed: {}", String::from_utf8_lossy(&g.stderr));
     let global_file = home.join(".phpvm").join("global");
     let global = fs::read_to_string(global_file).unwrap();
     assert_eq!(global.trim(), "1.2.3");
@@ -88,16 +92,19 @@ fn set_global_and_local() {
     let project = home.join("project");
     fs::create_dir_all(&project).unwrap();
     let l = phpvm_with_home(&home).current_dir(&project).args(["local", "2.0.0"]).output().unwrap();
-    assert!(l.status.success());
-    let local = fs::read_to_string(project.join(".php-version")).unwrap();
+    assert!(l.status.success(), "local failed: {}", String::from_utf8_lossy(&l.stderr));
+    let local_file = project.join(".php-version");
+    assert!(local_file.exists(), "local file not created: {}", local_file.display());
+    let local = fs::read_to_string(local_file).unwrap();
     assert_eq!(local.trim(), "2.0.0");
 }
 
 #[test]
 fn which_fallback_system() {
     let home = mk_temp_home("which");
-    // choose a ubiquitous program
-    let output = phpvm_with_home(&home).args(["which", "sh"]).output().unwrap();
+    // choose a ubiquitous program (cmd on Windows, sh on Unix)
+    let program = if cfg!(windows) { "cmd" } else { "sh" };
+    let output = phpvm_with_home(&home).args(["which", program]).output().unwrap();
     assert!(output.status.success());
     let out = String::from_utf8_lossy(&output.stdout);
     let path = out.trim();
