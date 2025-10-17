@@ -33,10 +33,6 @@ jobs:
             target: aarch64-unknown-linux-gnu
             out_os: linux
             out_arch: arm64
-          - os: windows-2022
-            target: x86_64-pc-windows-msvc
-            out_os: windows
-            out_arch: amd64
 
     steps:
       - uses: actions/checkout@v4
@@ -52,26 +48,7 @@ jobs:
           echo "OPENSSL_NO_VENDOR=0" >> $GITHUB_ENV
 
       - name: Cargo build (release)
-        if: matrix.out_os != 'windows'
-        shell: bash
         run: cargo build --release --target ${{ matrix.target }}
-
-      # - name: Cargo build (release) - Windows
-      #   if: matrix.out_os == 'windows'
-      #   shell: pwsh
-      #   run: cargo build --release --target ${{ matrix.target }}
-
-      # - name: Package artifact (Windows)
-      #   if: matrix.out_os == 'windows'
-      #   shell: pwsh
-      #   run: |
-      #     $ErrorActionPreference = 'Stop'
-      #     $bin = 'phpvm.exe'
-      #     $src = "target/${{ matrix.target }}/release/$bin"
-      #     $outdir = "dist"
-      #     New-Item -ItemType Directory -Force -Path $outdir | Out-Null
-      #     $zip = "$outdir/phpvm-windows-${{ matrix.out_arch }}.zip"
-      #     Compress-Archive -Path $src -DestinationPath $zip -Force
 
       - name: Package artifact
         shell: bash
