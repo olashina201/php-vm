@@ -49,17 +49,17 @@ jobs:
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
       - name: Cargo build (release)
-        if: matrix.out_os != 'windows'
+        if: runner.os != 'Windows'
         shell: bash
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Cargo build (release) - Windows
-        if: matrix.out_os == 'windows'
+        if: runner.os == 'Windows'
         shell: pwsh
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package artifact (Windows)
-        if: matrix.out_os == 'windows'
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -71,7 +71,7 @@ jobs:
           Compress-Archive -Path $src -DestinationPath $zip -Force
 
       - name: Package artifact (Unix)
-        if: matrix.out_os != 'windows'
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
