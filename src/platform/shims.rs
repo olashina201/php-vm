@@ -1,7 +1,7 @@
 use fs_err as fs;
 use std::path::{Path, PathBuf};
 
-pub fn ensure_shims(layout: &crate::dirs::Layout) -> anyhow::Result<()> {
+pub fn ensure_shims(layout: &crate::core::dirs::Layout) -> anyhow::Result<()> {
     fs::create_dir_all(&layout.shims)?;
     for name in ["php", "pecl", "pear", "composer"] {
         install_shim(&layout.shims, name)?;
@@ -34,7 +34,7 @@ fn install_shim(dir: &Path, name: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn which_executable(layout: &crate::dirs::Layout, version: &str, program: &str) -> anyhow::Result<PathBuf> {
+pub fn which_executable(layout: &crate::core::dirs::Layout, version: &str, program: &str) -> anyhow::Result<PathBuf> {
     let candidate = layout.versions.join(version).join("bin").join(program);
     if candidate.exists() { return Ok(candidate); }
     // Windows layout may differ, try root

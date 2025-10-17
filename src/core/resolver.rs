@@ -2,7 +2,7 @@ use fs_err as fs;
 use std::env;
 use std::path::Path;
 
-pub fn resolve_version(layout: &crate::dirs::Layout, cwd: Option<&Path>) -> Option<String> {
+pub fn resolve_version(layout: &crate::core::dirs::Layout, cwd: Option<&Path>) -> Option<String> {
     if let Ok(v) = env::var("PHPVM_VERSION") { if !v.trim().is_empty() { return Some(v); } }
     if let Some(dir) = cwd { if let Some(v) = find_php_version_file(dir) { return Some(v); } }
     read_global(&layout.root)
@@ -23,7 +23,7 @@ fn read_global(root: &Path) -> Option<String> {
     if p.exists() { fs::read_to_string(p).ok().map(|s| s.trim().to_string()) } else { None }
 }
 
-pub fn write_global(layout: &crate::dirs::Layout, version: &str) -> anyhow::Result<()> {
+pub fn write_global(layout: &crate::core::dirs::Layout, version: &str) -> anyhow::Result<()> {
     let p = layout.root.join("global");
     fs::write(p, version.as_bytes())?;
     Ok(())
