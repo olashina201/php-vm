@@ -3,18 +3,25 @@ pub async fn run(version: String, from: Option<String>, ts: bool) -> anyhow::Res
     let cache_dir = layout.cache;
     let versions_dir = layout.versions;
 
+    // Strip "v" prefix if present (e.g., "v8.4.2" -> "8.4.2")
+    let clean_version = if version.starts_with('v') {
+        version.strip_prefix('v').unwrap_or(&version).to_string()
+    } else {
+        version.clone()
+    };
+
     let url = if cfg!(windows) {
         let flavor = if ts { "ts" } else { "nts" };
-        format!("https://windows.php.net/downloads/releases/php-{}-Win32-vs16-x64-{}.zip", version, flavor)
+        format!("https://windows.php.net/downloads/releases/php-{}-Win32-vs16-x64-{}.zip", clean_version, flavor)
     } else {
-        format!("https://www.php.net/distributions/php-{}.tar.xz", version)
+        format!("https://www.php.net/distributions/php-{}.tar.xz", clean_version)
     };
 
     let filename = url.split('/').last().unwrap_or("php-archive");
     let archive_path = cache_dir.join(filename);
     let _ = crate::io::downloader::download_with_resume(&url, &archive_path, None).await?;
 
-    let extract_tmp = cache_dir.join(format!("extract-{}", version));
+    let extract_tmp = cache_dir.join(format!("extract-{}", clean_version));
     if extract_tmp.exists() { fs_err::remove_dir_all(&extract_tmp)?; }
     if cfg!(unix) && matches!(from.as_deref(), Some("source")) {
         let jobs = crate::core::config::load_or_default(&layout.config)?.jobs.unwrap_or_else(num_cpus::get);
@@ -25,9 +32,9 @@ pub async fn run(version: String, from: Option<String>, ts: bool) -> anyhow::Res
         } else {
             anyhow::bail!("source build requires a tar archive");
         }
-        crate::platform::build_unix::build_from_source(&extract_tmp, &versions_dir.join(&version), jobs, &[]).await?;
+        crate::platform::build_unix::build_from_source(&extract_tmp, &versions_dir.join(&clean_version), jobs, &[]).await?;
         if extract_tmp.exists() { let _ = fs_err::remove_dir_all(&extract_tmp); }
-        println!("built {} from source", version);
+        println!("built {} from source", clean_version);
         return Ok(());
     } else {
         if filename.ends_with(".tar.xz") {
@@ -47,13 +54,13 @@ pub async fn run(version: String, from: Option<String>, ts: bool) -> anyhow::Res
         if e.file_type()?.is_dir() { root = Some(e.path()); break; }
     }
     let root = root.unwrap_or(extract_tmp.clone());
-    let target = versions_dir.join(&version);
+    let target = versions_dir.join(&clean_version);
     if target.exists() { fs_err::remove_dir_all(&target)?; }
     fs_err::create_dir_all(&versions_dir)?;
     fs_err::rename(&root, &target)?;
     if extract_tmp.exists() { let _ = fs_err::remove_dir_all(&extract_tmp); }
 
-    println!("installed {} -> {}", version, target.display());
+    println!("installed {} -> {}", clean_version, target.display());
     Ok(())
 }
 
